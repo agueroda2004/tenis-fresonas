@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Para guardar clases especiales */
+@layer utilities {
+  body {
+    font-family: "Lexend", sans-serif;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .instagram-gradient {
+    background: radial-gradient(
+      circle at 30% 107%,
+      #fdf497 0%,
+      #fdf497 5%,
+      #fd5949 45%,
+      #d6249f 60%,
+      #285aeb 90%
+    );
+  }
+  .strawberry-shadow {
+    box-shadow:
+      0 10px 25px -5px rgba(255, 0, 0, 0.1),
+      0 8px 10px -6px rgba(255, 0, 0, 0.05);
+  }
+  :root {
+    --primary-color: #ff0000;
+    --accent-green: #00a63c;
+    --soft-pink: #fff0f1;
+  }
+}
+
+/* Para configurar colores personalizados en tailwind */
+@theme {
+  --color-primary: #ff0000;
+  --color-strawberry-green: #00a63c;
+  --color-background-light: #fff0f1;
+  --color-brand-red: #ff0000;
+  --color-accent-pink: #ffe4e6;
+  --color-st
+  --font-display: "Lexend", sans-serif;
+}
+
