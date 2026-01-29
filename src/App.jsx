@@ -1,3 +1,5 @@
+import Footer from "./layout/Footer";
+
 function App() {
   return (
     <div className="bg-background-light min-h-screen text-[#181511]">
@@ -140,6 +142,7 @@ function App() {
           </div>
         </main>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 }
