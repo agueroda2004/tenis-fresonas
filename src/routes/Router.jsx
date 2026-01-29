@@ -5,12 +5,34 @@ import App from "../App";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import NoFound from "../pages/NoFound";
+import NotMobile from "../pages/NotMobile";
+import MobileOnly from "../guards/MobileOnly";
+import Layout from "../layout/Layout";
 
 export const Router = createBrowserRouter([
-  { path: "/", element: <App /> },
-  { path: "/sneaker/:id", element: <SneakerDetail /> },
-  // Falta agregar una ruta para manejar rutas no encontradas
+  {
+    element: <Layout />,
+    children: [
+      {
+        path: "/",
+        element: (
+          <MobileOnly>
+            <App />
+          </MobileOnly>
+        ),
+      },
+      {
+        path: "/sneaker/:id",
+        element: (
+          <MobileOnly>
+            <SneakerDetail />
+          </MobileOnly>
+        ),
+      },
+      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/not_mobile", element: <NotMobile /> },
+    ],
+  },
+  { path: "/login", element: <Login /> },
   { path: "*", element: <NoFound /> },
-  { path: "login", element: <Login /> },
-  { path: "/dashboard", element: <Dashboard /> },
 ]);
