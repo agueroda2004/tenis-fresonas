@@ -1,0 +1,54 @@
+import { supabase } from "../lib/supabaseClient";
+
+export async function addSneaker(sneaker) {
+  const { data: newSneaker, error } = await supabase
+    .from("sneaker")
+    .insert(sneaker)
+    .select()
+    .maybeSingle();
+
+  if (error) throw new Error("ADD_SNEAKER_ERROR", { cause: error });
+
+  return newSneaker;
+}
+
+export async function updateSneakerImage(sneakerId, url) {
+  const { error: updateError } = await supabase
+    .from("sneaker")
+    .update({ image_url: url })
+    .eq("id", sneakerId);
+
+  if (updateError) {
+    throw new Error("UPDATE_SNEAKER_URL_ERROR", { cause: updateError });
+  }
+}
+
+export async function getAllSneaker() {
+  const { data: sneakers, error } = await supabase
+    .from("sneaker")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .range(0, 20);
+
+  if (error) throw new Error("GET_SNEAKERS_ERROR", { cause: error });
+
+  return sneakers;
+}
+
+export async function deleteSneaker(id) {
+  const { error } = await supabase.from("sneaker").delete().eq("id", id);
+  if (error) throw new Error("DELETE_SNEAKER_ERROR", { cause: error });
+}
+
+export async function updateSneakerService(sneaker, id) {
+  const { data: updatedSneaker, error } = await supabase
+    .from("sneaker")
+    .update(sneaker)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error("UPDATE_SNEAKER_ERROR", { cause: error });
+
+  return updatedSneaker;
+}
