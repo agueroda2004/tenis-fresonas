@@ -1,19 +1,12 @@
 import React, { useState } from "react";
 import SpinLoading from "./SpinLoading";
-import { useNavigate } from "react-router";
 import { extracPathFromUrl } from "../utils/imageUtils";
 import { deleteImageStorage } from "../service/imageService";
 import { deleteSneaker } from "../service/sneakerService";
 import toast from "react-hot-toast";
 
-export default function DeleteForm({
-  onClose,
-  selectedSneaker,
-  setSneakers,
-  sneakers,
-}) {
+export default function DeleteForm({ onClose, selectedSneaker, refresh }) {
   const [isLoading, setIsLoading] = useState(false);
-  const nav = useNavigate();
 
   async function handleDeleteSneaker() {
     const imagePath = extracPathFromUrl(selectedSneaker.image_url);
@@ -23,8 +16,7 @@ export default function DeleteForm({
 
       await deleteSneaker(selectedSneaker.id);
       onClose();
-      setSneakers(sneakers.filter((s) => s.id !== selectedSneaker.id));
-      nav("/dashboard");
+      refresh();
       toast.success("Tenis eliminado exitosamente");
     } catch (error) {
       toast.error("Error al eliminar el tenis. Por favor, inténtalo de nuevo.");
@@ -59,15 +51,15 @@ export default function DeleteForm({
         Esta acción no se puede deshacer. ¿Estás seguro de que quieres eliminar
         este tenis?
       </p>
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <button
-          className="flex-1 px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors cursor-pointer"
+          className="text-gray-500 font-semibold hover:text-gray-700 transition-colors px-4 py-2 cursor-pointer rounded-full border border-gray-200 w-40"
           onClick={onClose}
         >
           Cancelar
         </button>
         <button
-          className="flex-1 px-6 py-3 rounded-xl bg-strawberry-red text-white font-bold hover:bg-red-700/50 transition-all shadow-lg shadow-strawberry-red/20 active:scale-95 bg-red-700 cursor-pointer flex items-center justify-center gap-2"
+          className="bg-primary hover:bg-red-400 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-primary/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2 w-40 justify-center"
           onClick={handleDeleteSneaker}
         >
           {isLoading && <SpinLoading className="text-white" />}

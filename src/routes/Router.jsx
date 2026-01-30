@@ -8,6 +8,7 @@ import NoFound from "../pages/NoFound";
 import NotMobile from "../pages/NotMobile";
 import MobileOnly from "../guards/MobileOnly";
 import Layout from "../layout/Layout";
+import NotAccess from "../pages/NotAccess";
 
 export const Router = createBrowserRouter([
   {
@@ -34,5 +35,6 @@ export const Router = createBrowserRouter([
     ],
   },
   { path: "/login", element: <Login /> },
+  { path: "/not_access", element: <NotAccess /> },
   { path: "*", element: <NoFound /> },
 ]);

@@ -1,48 +1,113 @@
+import { useEffect, useState } from "react";
+import { NavLink, useNavigate, useParams } from "react-router";
+import { fetchSneakerById } from "../service/sneakerService";
+import SpinLoading from "../components/SpinLoading";
+import SneakerImage from "../components/SneakerImage";
+import { formatter } from "../utils/moneyFormetter";
+import logo from "../assets/logo.png";
+
 export default function SneakerDetail() {
+  const { id } = useParams();
+  const [sneaker, setSneaker] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const nav = useNavigate();
+
+  const handleShare = async () => {
+    const shareData = {
+      title: sneaker.nameModel,
+      text: `Ver ${sneaker.nameModel} - ${sneaker.brand} en Tenis Fresonas`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // usuario canceló o falló el share nativo
+      }
+    }
+
+    // fallback: copiar al portapapeles
+    try {
+      await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+      alert("Enlace copiado al portapapeles");
+    } catch {
+      alert("Error al copiar el enlace");
+    }
+  };
+
+  useEffect(() => {
+    const fetchSneaker = async () => {
+      try {
+        const sneaker = await fetchSneakerById(id);
+        setSneaker(sneaker);
+      } catch (error) {
+        console.error("Error fetching sneaker:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSneaker();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <SpinLoading className="text-primary" size={60} />
+      </div>
+    );
+  }
+  if (!sneaker) {
+    return nav("/not-found");
+  }
   return (
     <div className="bg-background-light min-h-screen text-[#181511]">
       <div className="max-w-[500px] mx-auto bg-pale-pink min-h-screen shadow-2xl relative flex flex-col">
         <header className="absolute top-0 left-0 right-0 z-50 px-4 py-6 flex items-center justify-between pointer-events-none">
-          <button className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-gray-800 shadow-sm transition-transform active:scale-90">
+          <NavLink
+            className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-gray-800 shadow-sm transition-transform active:scale-90"
+            to={"/"}
+          >
             <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-          <button className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-gray-800 shadow-sm transition-transform active:scale-90">
+          </NavLink>
+          <button
+            className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-gray-800 shadow-sm transition-transform active:scale-90"
+            onClick={handleShare}
+          >
             <span className="material-symbols-outlined">share</span>
           </button>
         </header>
         <main className="flex-1 pb-10">
           <div className="relative w-full aspect-square bg-white overflow-hidden">
-            <img
-              className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnTtHpURPjk1phSwDW_zEBFmB7PHrk-svjvOEeFalfVPRRHn1314H4v84rVMA22rMDnfsY1x5-IQHLNtzhsUt3uv__o5fnsJmg2k8LQnQ9PuBonZLWAKcaqluXnfgRve57OuhoglpVw1jyGXDNOOzYsT0Xe4ro3dmvb1Ojq1wYz313lyJa8QwG-4mrQ9moaXwU1WdCozyRtddk5NhZPs0QMmez98PXT-2vsYS_YkEp5GUXPHeRc8U4iGXzDaXCdKmGt8lcKYhouWj9"
-              alt="Air Jordan 1 Retro"
-              loading="lazy"
-              decoding="async"
-            />
+            <SneakerImage src={sneaker.image_url} />
           </div>
-          <div className="px-6 pt-8 space-y-6">
+          <div className="px-6 pt-8 space-y-6 flex justify-center flex-col">
             <div className="space-y-2">
-              <div className="flex justify-between items-end gap-4">
+              <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-black text-gray-900 leading-tight">
-                    Air Jordan 1 Retro
+                  <h1 className="text-xl font-black text-gray-900 leading-tight">
+                    {sneaker.nameModel}
                   </h1>
                   <p className="text-gray-500 text-base font-medium">
-                    Jordan Brand
+                    {sneaker.brand}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-primary text-3xl font-black">$190.00</p>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase">
-                    Incl. taxes
+                  <p className="text-primary text-3xl font-black">
+                    ₡{formatter.format(sneaker.price)}
                   </p>
                 </div>
               </div>
             </div>
             <div className="pt-4 space-y-4">
               <a
-                className="w-full bg-primary hover:bg-brand-red-dark text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-                href="#"
+                className="w-full bg-primary hover:bg-brand-red-dark text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 "
+                href={`https://ig.me/m/tenis_fresonas?text=${encodeURIComponent(
+                  `Hola, quiero información del modelo ${sneaker.nameModel}`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <svg
                   className="w-6 h-6 fill-current"
@@ -63,17 +128,18 @@ export default function SneakerDetail() {
                   check_circle
                 </span>
                 <p className="text-xs text-gray-400 font-bold uppercase">
-                  Calidad garantisada
+                  Calidad
                 </p>
+                <p className="text-xs font-bold uppercase">Garantizada</p>
               </div>
               <div className="bg-white/50 p-4 rounded-xl border border-pink-100/50">
                 <span className="material-symbols-outlined text-primary mb-2">
                   local_shipping
                 </span>
                 <p className="text-xs text-gray-400 font-bold uppercase">
-                  Shipping
+                  Envío
                 </p>
-                <p className="text-sm font-bold">Free Delivery</p>
+                <p className="text-sm font-bold">Gratis</p>
                 <p className="text-[10px] text-gray-400 mt-1 italic">
                   Aplica condiciones
                 </p>
@@ -81,14 +147,12 @@ export default function SneakerDetail() {
             </div>
           </div>
         </main>
-        <footer className="p-8 flex flex-col items-center gap-2 opacity-30">
+        <footer className="p-8 flex flex-col items-center gap-2 ">
           <div className="flex items-center gap-2">
-            <div className="bg-primary p-1 rounded text-white">
-              <span className="material-symbols-outlined text-sm">
-                nutrition
-              </span>
+            <div className="bg-white p-1 rounded">
+              <img src={logo} alt="T-Fresonas Logo" className="h-4 w-4" />
             </div>
-            <h2 className="text-sm font-bold tracking-tight">T-Fresonas</h2>
+            <h2 className="text-sm font-bold tracking-tight">Tenis Fresonas</h2>
           </div>
         </footer>
       </div>

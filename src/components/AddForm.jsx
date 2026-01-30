@@ -11,12 +11,7 @@ import {
 import { deleteImageStorage, uploadImage } from "../service/imageService";
 import SpinLoading from "./SpinLoading";
 
-export default function AddForm({
-  onClose,
-  updateSneaker,
-  setSneakers,
-  sneakers,
-}) {
+export default function AddForm({ onClose, updateSneaker, refresh }) {
   const fileInputRef = useRef(null);
   const [sneaker, setSneaker] = useState(
     updateSneaker
@@ -103,32 +98,19 @@ export default function AddForm({
         );
 
         if (sneaker.coverURL) {
-          console.log("Entramos aqui");
-          console.log(updateSneaker.image_url);
+          // Se elimina la imagen anterior si existe
           const imagePath = extracPathFromUrl(updateSneaker.image_url);
-          console.log(imagePath);
           if (imagePath) await deleteImageStorage(imagePath);
 
           const sneakerNewImageURL = await uploadImage(sneaker.coverURL);
-          await updateSneakerImage(updateSneaker.id, sneakerNewImageURL);
+          await updateSneakerImage(updateSneakerData.id, sneakerNewImageURL);
           setSneaker((b) => ({ ...b, imageURL: sneakerNewImageURL }));
         }
-
-        setSneakers((prevSneakers) =>
-          prevSneakers.map((sneakerItem) =>
-            sneakerItem.id === updateSneaker.id
-              ? {
-                  ...sneakerItem,
-                  ...updateSneakerData,
-                  image_url: sneaker.imageURL,
-                }
-              : sneakerItem,
-          ),
-        );
 
         onClose();
         toast.success("¡Tenis actualizado con éxito!");
         clearAll();
+        refresh();
       } else {
         const newSneaker = await addSneaker(sneakerToAdd);
 
@@ -137,20 +119,16 @@ export default function AddForm({
 
         setSneaker((b) => ({ ...b, imageURL: sneakerImageURL }));
 
-        setSneakers([
-          ...sneakers,
-          { ...newSneaker, image_url: sneakerImageURL },
-        ]);
         toast.success("¡Tenis agregado con éxito!");
         onClose();
         clearAll();
+        refresh();
       }
     } catch (error) {
       toast.error("Error al agregar el tenis. Inténtalo de nuevo.");
       console.log(error);
     } finally {
       setIsLoading(false);
-      onClose();
     }
   }
 
@@ -167,7 +145,7 @@ export default function AddForm({
     <>
       <div className="p-6 border-b border-accent-pink flex items-center justify-between">
         <h3 className="text-2xl font-black text-gray-900">
-          Agregar Nuevo Tenis
+          {updateSneaker ? "Actualizar Tenis" : "Agregar Nuevo Tenis"}
         </h3>
         <button
           className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -238,7 +216,7 @@ export default function AddForm({
               placeholder="Ej. Runner Pro Max"
               type="text"
               onChange={(e) =>
-                setSneaker({ ...sneaker, modelName: e.target.value })
+                setSneaker((prev) => ({ ...prev, modelName: e.target.value }))
               }
               value={sneaker.modelName}
             />
@@ -251,7 +229,7 @@ export default function AddForm({
               <select
                 className="w-full border-accent-pink rounded-lg focus:ring-primary focus:ring-1 px-4 py-2 outline-none text-gray-700"
                 onChange={(e) =>
-                  setSneaker({ ...sneaker, brand: e.target.value })
+                  setSneaker((prev) => ({ ...prev, brand: e.target.value }))
                 }
                 value={sneaker.brand}
               >
@@ -285,14 +263,14 @@ export default function AddForm({
         </div>
         <div className="flex items-center justify-end gap-4 pt-4">
           <button
-            className="text-gray-500 font-semibold hover:text-gray-700 transition-colors px-4 py-2 cursor-pointer"
+            className="text-gray-500 font-semibold hover:text-gray-700 transition-colors px-4 py-2 cursor-pointer rounded-full border border-gray-200 w-40"
             type="button"
             onClick={onClose}
           >
             Cancelar
           </button>
           <button
-            className="bg-primary hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-primary/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+            className="bg-primary hover:bg-red-400 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-primary/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2 w-40 justify-center"
             type="submit"
           >
             {isLoading && <SpinLoading className="text-white" />}

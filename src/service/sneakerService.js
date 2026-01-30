@@ -23,16 +23,29 @@ export async function updateSneakerImage(sneakerId, url) {
   }
 }
 
-export async function getAllSneaker() {
-  const { data: sneakers, error } = await supabase
+export async function fetchSneakers(page = 0, filter = {}, size = 10) {
+  const from = page * size;
+  const to = from + size - 1;
+
+  let query = supabase
     .from("sneaker")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
-    .range(0, 20);
+    .range(from, to);
+
+  if (filter.brand) {
+    query = query.eq("brand", filter.brand);
+  }
+
+  if (filter.nameModel?.trim()) {
+    query = query.ilike("nameModel", `%${filter.nameModel}%`);
+  }
+
+  const { data: sneakers, count, error } = await query;
 
   if (error) throw new Error("GET_SNEAKERS_ERROR", { cause: error });
 
-  return sneakers;
+  return { sneakers, count };
 }
 
 export async function deleteSneaker(id) {
@@ -51,4 +64,14 @@ export async function updateSneakerService(sneaker, id) {
   if (error) throw new Error("UPDATE_SNEAKER_ERROR", { cause: error });
 
   return updatedSneaker;
+}
+
+export async function fetchSneakerById(id) {
+  const { data: sneaker, error } = await supabase
+    .from("sneaker")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw new Error("GET_SNEAKER_BY_ID_ERROR", { cause: error });
+  return sneaker;
 }

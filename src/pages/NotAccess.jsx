@@ -1,7 +1,8 @@
 import React from "react";
+import { NavLink } from "react-router";
 import logo from "../assets/logo.png";
 
-export default function NoFound() {
+export default function NotAccess() {
   return (
     <div className="bg-background-light min-h-screen text-[#181511] flex flex-col">
       <header className="w-full px-6 py-8 fixed top-0 z-50">
@@ -17,18 +18,18 @@ export default function NoFound() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="space-y-8">
           <h2 className="text-5xl md:text-7xl font-black text-primary tracking-tighter uppercase">
-            404 - Not Found
+            403 - No Autorizado
           </h2>
           <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
-            La página que buscas no existe.
+            No tienes permiso para acceder a esta página.
           </h2>
           <div>
-            <a
+            <NavLink
               className="inline-flex items-center justify-center bg-primary hover:bg-brand-red-dark text-white font-bold py-4 px-12 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.98] text-lg"
-              href="/"
+              to="/login"
             >
               Volver al Inicio
-            </a>
+            </NavLink>
           </div>
         </div>
       </main>

@@ -1,11 +1,9 @@
 export const BRANDS = [
   "Nike",
+  "Jordan",
   "Adidas",
   "Puma",
   "Reebok",
   "New Balance",
-  "Under Armour",
-  "Converse",
   "Vans",
-  "Jordan",
 ];

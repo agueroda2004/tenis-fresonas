@@ -3,11 +3,12 @@ import Olverlay from "../components/Olverlay";
 import AddForm from "../components/AddForm";
 import DeleteForm from "../components/DeleteForm";
 import toast from "react-hot-toast";
-import { getAllSneaker } from "../service/sneakerService";
+import { fetchSneakers } from "../service/sneakerService";
 import { formatter } from "../utils/moneyFormetter";
 import SpinLoading from "../components/SpinLoading";
 import SneakerImage from "../components/SneakerImage";
 import { BRANDS } from "../data/brands";
+import { useNavigate } from "react-router";
 
 const MODAL_TYPES = {
   CREATE_SNEAKER: "CREATE_SNEAKER",
@@ -16,31 +17,78 @@ const MODAL_TYPES = {
 };
 
 export default function Dashboard() {
+  const nav = useNavigate();
   const [activeModal, setActiveModal] = useState(null);
   const [sneakers, setSneakers] = useState([]);
   const [selectedSneaker, setSelectedSneaker] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalSneakers, setTotalSneakers] = useState(0);
+  const [searchName, setSearchName] = useState("");
+  const [filters, setFilters] = useState({
+    brand: "",
+    nameModel: "",
+  });
+  const [refreshKey, setRefreshKey] = useState(false);
 
-  const closeModal = () => setActiveModal(null);
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedSneaker(null);
+  };
   const openModal = (type) => setActiveModal(type);
 
   useEffect(() => {
-    const fetchSneakers = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const sneakersData = await getAllSneaker();
-        setSneakers(sneakersData);
-      } catch (error) {
-        toast.error("Error al cargar los tenis. Inténtalo de nuevo.");
-        console.error(error);
+        const { sneakers, count } = await fetchSneakers(page, filters);
+        setSneakers(sneakers);
+        setTotalSneakers(count);
+      } catch {
+        toast.error("Error al cargar los tenis.");
       } finally {
         setIsLoading(false);
       }
     };
+    fetchData();
+  }, [filters, page, refreshKey]);
 
-    fetchSneakers();
-  }, []);
+  useEffect(() => {
+    setPage(0);
+  }, [filters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({
+        ...prev,
+        nameModel: searchName.trim() || null,
+      }));
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchName]);
+
+  const onBrandChange = (brand) => {
+    setFilters((prev) => ({ ...prev, brand }));
+  };
+
+  const onNameChange = (nameModel) => {
+    setSearchName(nameModel);
+  };
+
+  useEffect(() => {
+    const session = localStorage.getItem("isAuthenticated");
+
+    if (!session) {
+      nav("/not_access");
+    }
+  }, [nav]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    toast.success("Cierre de sesión exitoso.");
+    nav("/login");
+  };
 
   return (
     <>
@@ -50,10 +98,10 @@ export default function Dashboard() {
             <header className="flex flex-wrap justify-between items-center mb-8 gap-4">
               <div>
                 <h2 className="text-3xl font-black text-gray-900">
-                  Sneaker Inventory
+                  Inventario de Tenis
                 </h2>
                 <p className="text-gray-500">
-                  Manage your product catalog and stock levels.
+                  Administra tu catálogo de productos.
                 </p>
               </div>
               <button
@@ -61,7 +109,7 @@ export default function Dashboard() {
                 onClick={() => openModal(MODAL_TYPES.CREATE_SNEAKER)}
               >
                 <span className="material-symbols-outlined">add</span>
-                Create New Sneaker
+                Crear Nuevo Tenis
               </button>
             </header>
             <div className="bg-white rounded-2xl border border-accent-pink shadow-sm overflow-hidden">
@@ -72,8 +120,10 @@ export default function Dashboard() {
                   </span>
                   <input
                     className="w-full pl-10 pr-4 py-2 bg-pink-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="Search inventory..."
+                    placeholder="Buscar en el inventario..."
                     type="text"
+                    value={searchName}
+                    onChange={(e) => onNameChange(e.target.value)}
                   />
                 </div>
                 <div className="flex gap-3">
@@ -81,8 +131,11 @@ export default function Dashboard() {
                     <span className="material-symbols-outlined text-lg">
                       filter_list
                     </span>
-                    <select className="outline-none">
-                      <option value="">All Brands</option>
+                    <select
+                      className="outline-none"
+                      onChange={(e) => onBrandChange(e.target.value)}
+                    >
+                      <option value="">Marcas</option>
                       {BRANDS.map((brand) => (
                         <option key={brand} value={brand}>
                           {brand}
@@ -92,96 +145,126 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="min-h-120 overflow-y-auto">
+              <div className="h-140 overflow-y-auto">
                 <table className="w-full text-left ">
                   <thead>
                     <tr className="bg-pink-50/50 text-gray-500 text-xs uppercase tracking-widest">
-                      <th className="px-6 py-4 font-bold">Model Name</th>
-                      <th className="px-6 py-4 font-bold">Brand</th>
-                      <th className="px-6 py-4 font-bold">Price</th>
+                      <th className="px-6 py-4 font-bold">Nombre del Modelo</th>
+                      <th className="px-6 py-4 font-bold">Marca</th>
+                      <th className="px-6 py-4 font-bold">Precio</th>
                       <th className="px-6 py-4 font-bold text-center">
-                        Actions
+                        Acciones
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-accent-pink ">
-                    {isLoading && (
+                    {isLoading ? (
                       <tr>
                         <td colSpan={4} className="py-16 text-center">
                           <SpinLoading className="text-primary/80" size={100} />
                         </td>
                       </tr>
-                    )}
-                    {sneakers.map((sneaker) => (
-                      <tr
-                        className="hover:bg-pink-50/30 transition-colors border-b border-accent-pink"
-                        key={sneaker.id}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <SneakerImage src={sneaker.image_url} />
-                            <span className="font-bold">
-                              {sneaker.nameModel}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {sneaker.brand}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-gray-900">
-                          ₡ {formatter.format(sneaker.price)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              className="p-2 text-primary hover:bg-pink-100 rounded-lg transition-colors"
-                              onClick={() => {
-                                openModal(MODAL_TYPES.CREATE_SNEAKER);
-                                setSelectedSneaker(sneaker);
-                              }}
-                            >
-                              <span className="material-symbols-outlined">
-                                edit
-                              </span>
-                            </button>
-                            <button
-                              className="p-2 text-primary hover:bg-pink-100 rounded-lg transition-colors cursor-pointer"
-                              onClick={() => {
-                                openModal(MODAL_TYPES.DELETE_SNEAKER);
-                                setSelectedSneaker(sneaker);
-                              }}
-                            >
-                              <span className="material-symbols-outlined">
-                                delete
-                              </span>
-                            </button>
-                          </div>
+                    ) : sneakers.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-16 text-center">
+                          Tenis no encontrados.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      sneakers.map((sneaker) => (
+                        <tr
+                          className="hover:bg-pink-50/30 transition-colors border-b border-accent-pink"
+                          key={sneaker.id}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="aspect-square w-15 ">
+                                <SneakerImage src={sneaker.image_url} />
+                              </div>
+
+                              <span className="font-bold">
+                                {sneaker.nameModel}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {sneaker.brand}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-gray-900">
+                            ₡ {formatter.format(sneaker.price)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex justify-center gap-2">
+                              <button
+                                className="p-2 text-primary hover:bg-pink-100 rounded-lg transition-colors"
+                                onClick={() => {
+                                  openModal(MODAL_TYPES.CREATE_SNEAKER);
+                                  setSelectedSneaker(sneaker);
+                                }}
+                              >
+                                <span className="material-symbols-outlined">
+                                  edit
+                                </span>
+                              </button>
+                              <button
+                                className="p-2 text-primary hover:bg-pink-100 rounded-lg transition-colors cursor-pointer"
+                                onClick={() => {
+                                  openModal(MODAL_TYPES.DELETE_SNEAKER);
+                                  setSelectedSneaker(sneaker);
+                                }}
+                              >
+                                <span className="material-symbols-outlined">
+                                  delete
+                                </span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
               <div className="p-6 bg-pink-50/20 border-t border-accent-pink flex flex-wrap items-center justify-between gap-4">
                 <p className="text-sm text-gray-500">
-                  Showing <span className="font-bold">1</span> to{" "}
-                  <span className="font-bold">3</span> of{" "}
-                  <span className="font-bold">{sneakers.length}</span> results
+                  Mostrando{" "}
+                  <span className="font-bold">
+                    {sneakers.length > 0 ? page * 10 + 1 : 0}
+                  </span>{" "}
+                  a{" "}
+                  <span className="font-bold">
+                    {sneakers.length < 10
+                      ? sneakers.length + page * 10
+                      : (page + 1) * 10}
+                  </span>{" "}
+                  de <span className="font-bold">{totalSneakers}</span>{" "}
+                  resultados
                 </p>
                 <div className="flex gap-2">
                   <button
-                    className="px-4 py-2 border border-accent-pink rounded-lg text-sm font-semibold hover:bg-white disabled:opacity-50"
-                    disabled
+                    className="px-4 py-2 border border-accent-pink rounded-lg text-sm font-semibold hover:bg-white disabled:opacity-50 cursor-pointer disabled:cursor-auto"
+                    disabled={page === 0}
+                    onClick={() => setPage(page - 1)}
                   >
-                    Previous
+                    Anterior
                   </button>
 
-                  <button className="px-4 py-2 border border-accent-pink rounded-lg text-sm font-semibold hover:bg-white">
-                    Next
+                  <button
+                    className="px-4 py-2 border border-accent-pink rounded-lg text-sm font-semibold hover:bg-white disabled:opacity-50 cursor-pointer disabled:cursor-auto"
+                    disabled={(page + 1) * 10 >= totalSneakers}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Siguiente
                   </button>
                 </div>
               </div>
             </div>
+            <button
+              className=" text-gray-500 text-sm p-2 cursor-pointer mt-2 active:scale-95 transition-transform hover:underline"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </button>
           </main>
         </div>
       </div>
@@ -192,14 +275,14 @@ export default function Dashboard() {
             <AddForm
               onClose={closeModal}
               updateSneaker={selectedSneaker}
-              sneakers={sneakers}
-              setSneakers={setSneakers}
+              refresh={() => setRefreshKey((prev) => !prev)}
             />
           )}
           {activeModal === MODAL_TYPES.DELETE_SNEAKER && (
             <DeleteForm
               onClose={closeModal}
               selectedSneaker={selectedSneaker}
+              refresh={() => setRefreshKey((prev) => !prev)}
             />
           )}
         </Olverlay>

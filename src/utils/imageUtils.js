@@ -8,7 +8,7 @@ export function extracPathFromUrl(url) {
 // Funcion para optimizar imagenes antes de subirlas
 export async function optimizeImage(file) {
   const options = {
-    maxSizeMB: 0.3, // máx 300 KB
+    maxSizeMB: 0.5, // máx 500 KB
     maxWidthOrHeight: 800, // tamaño máximo
     useWebWorker: true,
   };
