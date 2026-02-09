@@ -3,7 +3,7 @@ export const BRANDS = [
   "Jordan",
   "Adidas",
   "Puma",
-  "Reebok",
+  "Converse",
   "New Balance",
   "Vans",
 ];

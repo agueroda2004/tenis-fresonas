@@ -82,7 +82,7 @@ function App() {
               </span>
             </div>
             <input
-              className="block w-full pl-10 pr-3 py-3 bg-pink-50/50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary placeholder-gray-500 outline-none"
+              className="block w-full pl-10 pr-3 py-3 bg-pink-50/50 border-none rounded-xl text-base focus:ring-2 focus:ring-primary placeholder-gray-500 outline-none"
               placeholder="Buscar tus tenis favoritos..."
               type="text"
               value={searchName}
